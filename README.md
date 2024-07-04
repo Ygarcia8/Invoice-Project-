@@ -1,9 +1,10 @@
-# Invoice-Project-
+import tkinter
 import tkinter as tk
+from tkinter import ttk
 from tkinter import messagebox
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
-import datetime
+
 
 
 def create_invoice(invoice_number, invoice_date, due_date, bill_to, items, tax_rate):
@@ -125,20 +126,75 @@ tk.Label(app, text="Tax Rate (%)").grid(row=4, column=0)
 entry_tax_rate = tk.Entry(app)
 entry_tax_rate.grid(row=4, column=1)
 
+services={
+        'sewer cleaning':['storm flushing','sanitary flushing','FDC Flushing','CB Cleaning','CB lead Flushing','RLBC Lead Flushing','MH Cleaning','Service Line Flush','Vc Cleaning'],
+        'CCTV Inspection':['Storm','sanitary','FDC','CB Lead','Lateral','RLCB Lead','Service Line','Subdrain','Dye Test','Pole Camara'],
+        'Trenchless Repairs':['Sg Repair','Pipe Re-Ruonding','Linear  Liner','Tee Liner','Spot Repair','Main lateral Grout','MH Grouting','Mandrile Test','Air Test','Smoke test'],
+        'Extra Services':['Soft Excavation','Investigation','Traffic Control','Water box Repair','Hidrovac Excavation','Utility Locates','MH Parging Repair','Cach Basin Parging','Robotic Curtting','General Repair'],
+    }
 tk.Label(app, text="Description").grid(row=5, column=0)
-tk.Label(app, text="Quantity").grid(row=5, column=0, columnspan=3)
+
+frame = ttk.Frame(app, padding="10")
+frame.grid(row=6, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+
+# Function to update combobox values based on the selected service category
+def update_combobox(serv):
+    selected_service = service_category.get()
+    items_combobox['values'] = services[selected_service]
+    items_combobox.set('')
+
+# Create a combobox for service categories
+service_category_label = ttk.Label(frame, text="Select Service Category:")
+service_category_label.grid(row=6, column=0)
+service_category = ttk.Combobox(frame, values=list(services.keys()))
+service_category.grid(row=6, column=1)
+service_category.bind("<<ComboboxSelected>>", update_combobox)
+
+frame = ttk.Frame(frame, padding="10")
+frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+
+# Create a frame for checkboxes
+checkbox_frame = ttk.Frame(frame)
+checkbox_frame.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E))
+
+
+# Function to update checkboxes based on the selected service category
+def update_checkboxes(event):
+    # Clear existing checkboxes
+    for widget in checkbox_frame.winfo_children():
+        widget.destroy()
+
+    selected_service = service_category.get()
+    items = services[selected_service]
+
+    # Create checkboxes for each item
+    for item in items:
+        var = tk.BooleanVar()
+        chk = ttk.Checkbutton(checkbox_frame, text=item, variable=var)
+        chk.var = var
+        chk.pack(anchor=tk.W)
+        checkboxes[item] = var
+
+
+# Create a combobox for service categories
+service_category_label = ttk.Label(frame, text="Select Service Category:")
+service_category_label.grid(row=0, column=0, pady=5, sticky=tk.W)
+service_category = ttk.Combobox(frame, values=list(services.keys()))
+service_category.grid(row=0, column=1, pady=5, sticky=(tk.W, tk.E))
+service_category.bind("<<ComboboxSelected>>", update_checkboxes)
+
+# Dictionary to hold the state of each checkbox
+checkboxes = {}
+
+# Description label
+
+
+# Function to update checkboxes based on the selected service category
+
+tk.Label(app, text="Quantity (hrs)").grid(row=5, column=0, columnspan=3)
 tk.Label(app, text="Unit Price").grid(row=5, column=2, columnspan=1)
 
-items_entries = []
-for i in range(3):  # Allow 3 items for simplicity; you can add more rows if needed
-    entry_description = tk.Entry(app)
-    entry_quantity = tk.Entry(app)
-    entry_unit_price = tk.Entry(app)
- 
-    entry_quantity.grid(row=6 + i, column=1)
-    entry_unit_price.grid(row=6 + i, column=2)
-    items_entries.append((entry_description, entry_quantity, entry_unit_price))
 
-tk.Button(app, text="Generate Invoice", command=generate_invoice).grid(row=9, column=0, columnspan=3)
+tk.Button(app, text="Generate Invoice", command=generate_invoice).grid(row=9, column=3, columnspan=3)
 
 app.mainloop()
