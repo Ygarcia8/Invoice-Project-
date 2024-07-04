@@ -88,7 +88,7 @@ def generate_invoice():
         return
 
     items = []
-    for item in items_entries:
+    for item in items:
         description = item[0].get()
         try:
             quantity = int(item[1].get())
@@ -140,8 +140,8 @@ frame.grid(row=6, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 # Function to update combobox values based on the selected service category
 def update_combobox(serv):
     selected_service = service_category.get()
-    items_combobox['values'] = services[selected_service]
-    items_combobox.set('')
+    serv['values'] = services[selected_service]
+    serv.set('')
 
 # Create a combobox for service categories
 service_category_label = ttk.Label(frame, text="Select Service Category:")
