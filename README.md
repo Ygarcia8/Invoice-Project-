@@ -1,200 +1,148 @@
-import tkinter
 import tkinter as tk
-from tkinter import ttk
-from tkinter import messagebox
+from tkinter import ttk, messagebox
+from fpdf import FPDF
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 
 
+# Define the services dictionary with prices
+services = {
+    'Sewer Cleaning': [('Storm Flushing', 100), ('Sanitary Flushing', 50), ('FDC Flushing', 100), ('CB Cleaning', 150),
+                       ('CB Lead Flushing', 90), ('RLBC Lead Flushing', 150), ('MH Cleaning', 375),
+                       ('Service Line Flush', 450), ('Vc Cleaning', 500)],
+    'CCTV Inspection': [('Storm', 120), ('Sanitary', 50), ('FDC', 50), ('CB Lead', 120), ('Lateral', 40),
+                        ('RLCB Lead', 170), ('Service Line', 420), ('Subdrain', 470), ('Dye Test', 520),
+                        ('Pole Camera', 570)],
+    'Trenchless Repairs': [('Sg Repair', 130), ('Pipe Re-Rounding', 180), ('Linear Liner', 230), ('Tee Liner', 280),
+                           ('Spot Repair', 330), ('Main Lateral Grout', 280), ('MH Grouting', 130),
+                           ('Mandrile Test', 180), ('Air Test', 130), ('Smoke Test', 80)],
+    'Extra Services': [('Soft Excavation', 340), ('Investigation', 190), ('Traffic Control', 140),
+                       ('Water Box Repair', 290), ('Hidrovac Excavation', 440), ('Utility Locates', 290),
+                       ('MH Parging Repair', 440), ('Catch Basin Parging', 490), ('Robotic Cutting', 540),
+                       ('General Repair', 590)]
+}
 
-def create_invoice(invoice_number, invoice_date, due_date, bill_to, items, tax_rate):
-    c = canvas.Canvas(f"invoice_{invoice_number}.pdf", pagesize=letter)
-    width, height = letter
-
-    # Company Information
-    c.setFont("Helvetica-Bold", 20)
-    c.drawString(50, 750, "Global Sewer Services")
-    c.setFont("Helvetica", 10)
-    c.drawString(50, 735, "69 Maplecrete Rd, Concord")
-    c.drawString(50, 725, "Vaungh,Ontario, L4K 1E5")
-    c.drawString(50, 715, "info@globalsewer.com")
-    c.drawString(50, 705, "Phone: 905-738-6704")
 
 
-    # Invoice Information
-    c.setFont("Helvetica-Bold", 16)
-    c.drawString(400, 750, "Invoice")
-    c.setFont("Helvetica", 10)
-    c.drawString(400, 735, f"Invoice Number: {invoice_number}")
-    c.drawString(400, 720, f"Invoice Date: {invoice_date}")
-    c.drawString(400, 705, f"Due Date: {due_date}")
+class InvoiceApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Invoice Generator")
 
-    # Bill To Information
-    c.setFont("Helvetica-Bold", 12)
-    c.drawString(50, 680, "Bill To:")
-    c.setFont("Helvetica", 10)
-    y_position = 665
-    for line in bill_to.split('\n'):
-        c.drawString(50, y_position, line)
-        y_position -= 15
+        self.items = []
+        # Canvas for header
+        self.canvas = tk.Canvas(root, width=400, height=100)
+        self.canvas.grid(row=0, column=0, columnspan=2)
+        self.canvas.create_text(200, 20, text="Global Sewer Services",font=('Arial', 24, 'bold'))
 
-    # Table Header
-    c.setFont("Helvetica-Bold", 10)
-    c.drawString(50, 630, "Description")
-    c.drawString(250, 630, "Quantity")
-    c.drawString(350, 630, "Unit Price")
-    c.drawString(450, 630, "Total")
+        # Service selection
+        self.service_var = tk.StringVar()
+        self.service_combo = ttk.Combobox(root, textvariable=self.service_var)
+        self.service_combo['values'] = list(services.keys())
+        self.service_combo.grid(row=3, column=1, padx=10, pady=5)
+        self.service_combo.bind("<<ComboboxSelected>>", self.update_items)
 
-    # Table Content
-    c.setFont("Helvetica", 10)
-    y_position = 615
-    subtotal = 0
-    for item in items:
-        description, quantity, unit_price = item
-        total = quantity * unit_price
-        subtotal += total
-        c.drawString(50, y_position, description)
-        c.drawString(250, y_position, str(quantity))
-        c.drawString(350, y_position, f"${unit_price:.2f}")
-        c.drawString(450, y_position, f"${total:.2f}")
-        y_position -= 15
+        # Item selection
+        self.item_var = tk.StringVar()
+        self.item_combo = ttk.Combobox(root, textvariable=self.item_var)
+        self.item_combo.grid(row=4, column=1, padx=10, pady=5)
 
-    # Subtotal, Tax, Total
-    tax = subtotal * tax_rate / 100
-    total_due = subtotal + tax
+        # Hours input
+        self.hours_var = tk.IntVar()
+        self.hours_entry = tk.Entry(root, textvariable=self.hours_var)
+        self.hours_entry.grid(row=5, column=1, padx=10, pady=5)
 
-    c.drawString(350, y_position, "Subtotal")
-    c.drawString(450, y_position, f"${subtotal:.2f}")
-    y_position -= 15
-    c.drawString(350, y_position, f"Tax ({tax_rate}%)")
-    c.drawString(450, y_position, f"${tax:.2f}")
-    y_position -= 15
-    c.setFont("Helvetica-Bold", 10)
-    c.drawString(350, y_position, "Total Due")
-    c.drawString(450, y_position, f"${total_due:.2f}")
+        # Company address input
+        self.address_var = tk.StringVar()
+        self.address_entry = tk.Entry(root, textvariable=self.address_var)
+        self.address_entry.grid(row=0, column=1, padx=10, pady=5)
 
-    # Save PDF
-    c.save()
-def generate_invoice():
-    invoice_number = entry_invoice_number.get()
-    invoice_date = entry_invoice_date.get()
-    due_date = entry_due_date.get()
-    bill_to = entry_bill_to.get("1.0", tk.END).strip()
+        # Invoice number input
+        self.invoice_var = tk.StringVar()
+        self.invoice_entry = tk.Entry(root, textvariable=self.invoice_var)
+        self.invoice_entry.grid(row=1, column=1, padx=10, pady=5)
 
-    try:
-        tax_rate = float(entry_tax_rate.get())
-    except ValueError:
-        messagebox.showerror("Invalid Input", "Tax rate must be a number.")
-        return
+        # Date input
+        self.date_var = tk.StringVar()
+        self.date_entry = tk.Entry(root, textvariable=self.date_var)
+        self.date_entry.grid(row=2, column=1, padx=10, pady=5)
 
-    items = []
-    for item in items:
-        description = item[0].get()
-        try:
-            quantity = int(item[1].get())
-            unit_price = float(item[2].get())
-        except ValueError:
-            messagebox.showerror("Invalid Input", "Quantity must be an integer and Unit Price must be a number.")
+        # Buttons
+        tk.Button(root, text="Add Item", command=self.add_item).grid(row=6, column=1, padx=10, pady=5)
+        tk.Button(root, text="Generate Invoice", command=self.generate_invoice).grid(row=7, column=1, padx=10, pady=5)
+
+        # Listbox for items
+        self.items_listbox = tk.Listbox(root)
+        self.items_listbox.grid(row=8, column=1, padx=10, pady=5)
+
+        # Labels
+        tk.Label(root, text="Company Address:").grid(row=0, column=0, padx=10, pady=5)
+        tk.Label(root, text="Invoice Number:").grid(row=1, column=0, padx=10, pady=5)
+        tk.Label(root, text="Date:").grid(row=2, column=0, padx=10, pady=5)
+        tk.Label(root, text="Select Service:").grid(row=3, column=0, padx=10, pady=5)
+        tk.Label(root, text="Select Item:").grid(row=4, column=0, padx=10, pady=5)
+        tk.Label(root, text="Enter Hours:").grid(row=5, column=0, padx=10, pady=5)
+
+
+    def update_items(self, event):
+        service = self.service_var.get()
+        if service in services:
+            items = [item[0] for item in services[service]]
+            self.item_combo['values'] = items
+
+    def add_item(self):
+        service = self.service_var.get()
+        item = self.item_var.get()
+        hours = self.hours_var.get()
+
+        if service and item and hours:
+            price = next(price for name, price in services[service] if name == item)
+            total = price * hours
+            self.items.append((service, item, hours, total))
+            self.items_listbox.insert(tk.END, f"{service} - {item} - {hours} hours - ${total:.2f}")
+        else:
+            messagebox.showwarning("Input Error", "Please fill all fields.")
+
+    def generate_invoice(self):
+        address = self.address_var.get()
+        invoice_number = self.invoice_var.get()
+        date = self.date_var.get()
+
+        if not address or not invoice_number or not date:
+            messagebox.showwarning("Input Error", "Please fill all fields.")
             return
-        items.append((description, quantity, unit_price))
 
-    create_invoice(invoice_number, invoice_date, due_date, bill_to, items, tax_rate)
-    messagebox.showinfo("Success", "Invoice generated successfully.")
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Arial", size=16)
 
-
-app = tk.Tk()
-app.title("Invoice Global Sewer")
-
-tk.Label(app, text="Invoice Number").grid(row=0, column=0)
-entry_invoice_number = tk.Entry(app)
-entry_invoice_number.grid(row=0, column=1)
-
-tk.Label(app, text="Invoice Date").grid(row=1, column=0)
-entry_invoice_date = tk.Entry(app)
-entry_invoice_date.grid(row=1, column=1)
-
-tk.Label(app, text="Due Date").grid(row=2, column=0)
-entry_due_date = tk.Entry(app)
-entry_due_date.grid(row=2, column=1)
-
-#add sub categories  Adreess pc and city
-tk.Label(app, text="Bill To").grid(row=3, column=0)
-entry_bill_to = tk.Text(app, height=5, width=30)
-entry_bill_to.grid(row=3, column=1)
-
-tk.Label(app, text="Tax Rate (%)").grid(row=4, column=0)
-entry_tax_rate = tk.Entry(app)
-entry_tax_rate.grid(row=4, column=1)
-
-services={
-        'sewer cleaning':['storm flushing','sanitary flushing','FDC Flushing','CB Cleaning','CB lead Flushing','RLBC Lead Flushing','MH Cleaning','Service Line Flush','Vc Cleaning'],
-        'CCTV Inspection':['Storm','sanitary','FDC','CB Lead','Lateral','RLCB Lead','Service Line','Subdrain','Dye Test','Pole Camara'],
-        'Trenchless Repairs':['Sg Repair','Pipe Re-Ruonding','Linear  Liner','Tee Liner','Spot Repair','Main lateral Grout','MH Grouting','Mandrile Test','Air Test','Smoke test'],
-        'Extra Services':['Soft Excavation','Investigation','Traffic Control','Water box Repair','Hidrovac Excavation','Utility Locates','MH Parging Repair','Cach Basin Parging','Robotic Curtting','General Repair'],
-    }
-tk.Label(app, text="Description").grid(row=5, column=0)
-
-frame = ttk.Frame(app, padding="10")
-frame.grid(row=6, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-
-# Function to update combobox values based on the selected service category
-def update_combobox(serv):
-    selected_service = service_category.get()
-    serv['values'] = services[selected_service]
-    serv.set('')
-
-# Create a combobox for service categories
-service_category_label = ttk.Label(frame, text="Select Service Category:")
-service_category_label.grid(row=6, column=0)
-service_category = ttk.Combobox(frame, values=list(services.keys()))
-service_category.grid(row=6, column=1)
-service_category.bind("<<ComboboxSelected>>", update_combobox)
-
-frame = ttk.Frame(frame, padding="10")
-frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-
-# Create a frame for checkboxes
-checkbox_frame = ttk.Frame(frame)
-checkbox_frame.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E))
+        pdf.cell(200, 10, txt="Global Sewer Services", ln=True, align='C')
+        pdf.cell(200, 10, txt="69 Maplecrete Rd, Concord", ln=True, align='C')
+        pdf.cell(200, 10, txt="Email: contact@globalsewerservices.com", ln=True, align='C')
+        pdf.cell(200, 10, txt="Phone: (905-738-6704)", ln=True, align='C')
+        pdf.cell(200, 10, txt="", ln=True, align='C')
 
 
-# Function to update checkboxes based on the selected service category
-def update_checkboxes(event):
-    # Clear existing checkboxes
-    for widget in checkbox_frame.winfo_children():
-        widget.destroy()
+        pdf.cell(200, 10, txt=f"Date: {date}", ln=True, align='L')
+        pdf.cell(200, 10, txt=f"Invoice #: {invoice_number}", ln=True, align='L')
+        pdf.cell(200, 10, txt=f"Address: {address}", ln=True, align='L')
+        pdf.cell(200, 10, txt="", ln=True, align='L')
 
-    selected_service = service_category.get()
-    items = services[selected_service]
+        pdf.cell(200, 10, txt="Services Rendered:", ln=True, align='L')
+        pdf.cell(200, 10, txt="", ln=True, align='L')
 
-    # Create checkboxes for each item
-    for item in items:
-        var = tk.BooleanVar()
-        chk = ttk.Checkbutton(checkbox_frame, text=item, variable=var)
-        chk.var = var
-        chk.pack(anchor=tk.W)
-        checkboxes[item] = var
+        total_amount = 0
+        for service, item, hours, total in self.items:
+            pdf.cell(200, 10, txt=f"{service} - {item} - {hours} hours - ${total:.2f}", ln=True, align='L')
+            total_amount += total
 
+        pdf.cell(200, 10, txt="", ln=True, align='L')
+        pdf.cell(200, 10, txt=f"Total Amount Due: ${total_amount:.2f}", ln=True, align='L')
 
-# Create a combobox for service categories
-service_category_label = ttk.Label(frame, text="Select Service Category:")
-service_category_label.grid(row=0, column=0, pady=5, sticky=tk.W)
-service_category = ttk.Combobox(frame, values=list(services.keys()))
-service_category.grid(row=0, column=1, pady=5, sticky=(tk.W, tk.E))
-service_category.bind("<<ComboboxSelected>>", update_checkboxes)
+        pdf.output("invoice.pdf")
+        messagebox.showinfo("Invoice Generated", "Invoice has been generated and saved as 'invoice.pdf'.")
 
-# Dictionary to hold the state of each checkbox
-checkboxes = {}
-
-# Description label
-
-
-# Function to update checkboxes based on the selected service category
-
-tk.Label(app, text="Quantity (hrs)").grid(row=5, column=0, columnspan=3)
-tk.Label(app, text="Unit Price").grid(row=5, column=2, columnspan=1)
-
-
-tk.Button(app, text="Generate Invoice", command=generate_invoice).grid(row=9, column=3, columnspan=3)
-
-app.mainloop()
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = InvoiceApp(root)
+    root.mainloop()
