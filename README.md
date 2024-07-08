@@ -33,7 +33,7 @@ class InvoiceApp:
         # Canvas for header
         self.canvas = tk.Canvas(root, width=400, height=100)
         self.canvas.grid(row=0, column=0, columnspan=2)
-        self.canvas.create_text(200, 20, text="Global Sewer Services",font=('Arial', 24, 'bold'))
+        self.canvas.create_text(200, 20, text="Global Sewer Services",font=('Arial', 20, 'bold'))
 
         # Service selection
         self.service_var = tk.StringVar()
@@ -57,6 +57,12 @@ class InvoiceApp:
         self.address_entry = tk.Entry(root, textvariable=self.address_var)
         self.address_entry.grid(row=0, column=1, padx=10, pady=5)
 
+        #City input
+        Cities=['Toronto','Ottawa','Mississauga','Brampton','Hamilton','London','Markham','Vaughan','Kitchener','Windsor']
+        self.city_var = tk.StringVar()
+        self.city_combo = ttk.Combobox(root, textvariable=self.city_var)
+        self.city_combo['values'] = Cities
+        self.city_combo.grid(row=0, column=4, padx=10, pady=5)
         # Invoice number input
         self.invoice_var = tk.StringVar()
         self.invoice_entry = tk.Entry(root, textvariable=self.invoice_var)
@@ -67,22 +73,28 @@ class InvoiceApp:
         self.date_entry = tk.Entry(root, textvariable=self.date_var)
         self.date_entry.grid(row=2, column=1, padx=10, pady=5)
 
+        # Tax percentage input
+        self.tax_var = tk.DoubleVar()
+        self.tax_entry = tk.Entry(root, textvariable=self.tax_var)
+        self.tax_entry.grid(row=6, column=1, padx=10, pady=5)
+
         # Buttons
-        tk.Button(root, text="Add Item", command=self.add_item).grid(row=6, column=1, padx=10, pady=5)
-        tk.Button(root, text="Generate Invoice", command=self.generate_invoice).grid(row=7, column=1, padx=10, pady=5)
+        tk.Button(root, text="Add Item", command=self.add_item).grid(row=7, column=1, padx=10, pady=5)
+        tk.Button(root, text="Generate Invoice", command=self.generate_invoice).grid(row=8, column=1, padx=10, pady=5)
 
         # Listbox for items
         self.items_listbox = tk.Listbox(root)
-        self.items_listbox.grid(row=8, column=1, padx=10, pady=5)
+        self.items_listbox.grid(row=9, column=1, padx=10, pady=5)
 
         # Labels
-        tk.Label(root, text="Company Address:").grid(row=0, column=0, padx=10, pady=5)
-        tk.Label(root, text="Invoice Number:").grid(row=1, column=0, padx=10, pady=5)
-        tk.Label(root, text="Date:").grid(row=2, column=0, padx=10, pady=5)
-        tk.Label(root, text="Select Service:").grid(row=3, column=0, padx=10, pady=5)
-        tk.Label(root, text="Select Item:").grid(row=4, column=0, padx=10, pady=5)
-        tk.Label(root, text="Enter Hours:").grid(row=5, column=0, padx=10, pady=5)
-
+        tk.Label(root, text="Company Address:",bg='lightblue').grid(row=0, column=0, padx=10, pady=5)
+        tk.Label(root,text="City:",bg='lightblue').grid(row=0,column=2,padx=40, pady=50)
+        tk.Label(root, text="Invoice Number:",bg='lightblue').grid(row=1, column=0, padx=10, pady=5)
+        tk.Label(root, text="Date:",bg='lightblue').grid(row=2, column=0, padx=10, pady=5)
+        tk.Label(root, text="Select Service:",bg='lightblue').grid(row=3, column=0, padx=10, pady=5)
+        tk.Label(root, text="Select Item:",bg='lightblue').grid(row=4, column=0, padx=10, pady=5)
+        tk.Label(root, text="Enter Hours:",bg='lightblue').grid(row=5, column=0, padx=10, pady=5)
+        tk.Label(root, text="Tax Percentage:",bg='lightblue').grid(row=6, column=0, padx=10, pady=5)
 
     def update_items(self, event):
         service = self.service_var.get()
@@ -99,16 +111,18 @@ class InvoiceApp:
             price = next(price for name, price in services[service] if name == item)
             total = price * hours
             self.items.append((service, item, hours, total))
-            self.items_listbox.insert(tk.END, f"{service} - {item} - {hours} hours - ${total:.2f}")
+            self.items_listbox.insert(tk.END, f"{service} / {item}  {hours} hours - ${total:.2f}")
         else:
             messagebox.showwarning("Input Error", "Please fill all fields.")
 
     def generate_invoice(self):
         address = self.address_var.get()
+        city = self.city_var.get()
         invoice_number = self.invoice_var.get()
         date = self.date_var.get()
+        tax_percentage = self.tax_var.get()
 
-        if not address or not invoice_number or not date:
+        if not address or not city or not invoice_number or not date or tax_percentage is None:
             messagebox.showwarning("Input Error", "Please fill all fields.")
             return
 
@@ -116,30 +130,48 @@ class InvoiceApp:
         pdf.add_page()
         pdf.set_font("Arial", size=16)
 
+        pdf.set_text_color(0, 0, 128)  # Set text color to dark blue
         pdf.cell(200, 10, txt="Global Sewer Services", ln=True, align='C')
         pdf.cell(200, 10, txt="69 Maplecrete Rd, Concord", ln=True, align='C')
         pdf.cell(200, 10, txt="Email: contact@globalsewerservices.com", ln=True, align='C')
         pdf.cell(200, 10, txt="Phone: (905-738-6704)", ln=True, align='C')
         pdf.cell(200, 10, txt="", ln=True, align='C')
 
-
+        pdf.set_text_color(0, 0, 0)  # Reset text color to black
         pdf.cell(200, 10, txt=f"Date: {date}", ln=True, align='L')
         pdf.cell(200, 10, txt=f"Invoice #: {invoice_number}", ln=True, align='L')
         pdf.cell(200, 10, txt=f"Address: {address}", ln=True, align='L')
+        pdf.cell(200, 10, txt=f"City: {city}", ln=True, align='L')
         pdf.cell(200, 10, txt="", ln=True, align='L')
 
         pdf.cell(200, 10, txt="Services Rendered:", ln=True, align='L')
         pdf.cell(200, 10, txt="", ln=True, align='L')
 
-        total_amount = 0
+        # Subtitles for quantity and price
+        pdf.cell(95, 10, txt="Item", border=1, align='C')
+        pdf.cell(25, 10, txt="Quantity", border=1, align='C')
+        pdf.cell(25, 10, txt="Price", border=1, align='C')
+        pdf.cell(30, 10, txt="Total", border=1, align='C')
+        pdf.ln(10)
+
+        sub_total = 0
         for service, item, hours, total in self.items:
-            pdf.cell(200, 10, txt=f"{service} - {item} - {hours} hours - ${total:.2f}", ln=True, align='L')
-            total_amount += total
+            pdf.cell(95, 10, txt=f"{service} - {item}", border=1, align='L')
+            pdf.cell(25, 10, txt=f"{hours}", border=1, align='C')
+            pdf.cell(25, 10, txt=f"${total / hours:.2f}", border=1, align='R')
+            pdf.cell(30, 10, txt=f"${total:.2f}", border=1, align='R')
+            pdf.ln(10)
+            sub_total+= total
+        tax_amount = sub_total * (tax_percentage / 100)
+        total_amount = sub_total + tax_amount
 
-        pdf.cell(200, 10, txt="", ln=True, align='L')
-        pdf.cell(200, 10, txt=f"Total Amount Due: ${total_amount:.2f}", ln=True, align='L')
-
-        pdf.output("invoice.pdf")
+        pdf.cell(200, 10, txt="", ln=True, align='R')
+        pdf.cell(200, 10, txt=f"SubTotal: ${sub_total:.2f}", ln=True, align='R')
+        pdf.cell(200, 10, txt=f"Tax ({tax_percentage}%): ${tax_amount:.2f}", ln=True, align='R')
+        pdf.cell(200, 10, txt=f"Total Amount Due: ${total_amount:.2f}", ln=True, align='R')
+        # Save the PDF with a unique filename
+        filename = f"invoice_{invoice_number}.pdf"
+        pdf.output(filename)
         messagebox.showinfo("Invoice Generated", "Invoice has been generated and saved as 'invoice.pdf'.")
 
 if __name__ == "__main__":
