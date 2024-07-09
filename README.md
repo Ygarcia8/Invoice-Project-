@@ -1,9 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 from fpdf import FPDF
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-
 
 # Define the services dictionary with prices
 services = {
