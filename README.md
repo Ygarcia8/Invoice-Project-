@@ -129,12 +129,13 @@ class InvoiceApp:
         pdf.add_page()
         pdf.set_font("Arial", size=14)
 
-        pdf.set_text_color(0, 0, 128)  # Set text color to dark blue
-        pdf.cell(200, 10, txt="Global Sewer Services", ln=True, align='C')
-        pdf.cell(200, 10, txt="69 Maplecrete Rd, Concord", ln=True, align='C')
-        pdf.cell(200, 10, txt="Email: contact@globalsewerservices.com", ln=True, align='C')
-        pdf.cell(200, 10, txt="Phone: (905-738-6704)", ln=True, align='C')
-        pdf.cell(200, 10, txt="", ln=True, align='C')
+        pdf.set_text_color(0, 128, 0)  # Set text color to dark blue
+        pdf.cell(200, 8, txt="Global Sewer Services", ln=True, align='C')
+        pdf.set_text_color(0, 0, 168)
+        pdf.cell(200, 5, txt="69 Maplecrete Rd, Concord", ln=True, align='C')
+        pdf.cell(200, 5, txt="Email: contact@globalsewerservices.com", ln=True, align='C')
+        pdf.cell(200, 5, txt="Phone: (905-738-6704)", ln=True, align='C')
+        pdf.cell(200, 5, txt="", ln=True, align='C')
 
         pdf.set_text_color(0, 0, 0)  # Reset text color to black
         pdf.cell(200, 10, txt=f"Date: {date}", ln=True, align='L')
@@ -142,11 +143,12 @@ class InvoiceApp:
         pdf.cell(200, 10, txt=f"Address: {address}", ln=True, align='L')
         pdf.cell(200, 10, txt=f"City: {city}", ln=True, align='L')
         pdf.cell(200, 10, txt="", ln=True, align='L')
-
-        pdf.cell(200, 10, txt="Services Rendered:", ln=True, align='L')
+        pdf.set_text_color(0, 0, 180)
+        pdf.cell(200, 5, txt="Services Rendered:", ln=True, align='L')
         pdf.cell(200, 10, txt="", ln=True, align='L')
 
         # Subtitles for quantity and price
+        pdf.set_text_color(0, 0, 0)
         pdf.cell(95, 10, txt="Item", border=1, align='C')
         pdf.cell(25, 10, txt="Quantity", border=1, align='C')
         pdf.cell(25, 10, txt="Price", border=1, align='C')
@@ -167,6 +169,7 @@ class InvoiceApp:
         pdf.cell(200, 10, txt="", ln=True, align='R')
         pdf.cell(200, 10, txt=f"SubTotal: ${sub_total:.2f}", ln=True, align='R')
         pdf.cell(200, 10, txt=f"Tax ({tax_percentage}%): ${tax_amount:.2f}", ln=True, align='R')
+        pdf.set_text_color(190, 0, 0)
         pdf.cell(200, 10, txt=f"Total Amount Due: ${total_amount:.2f}", ln=True, align='R')
         # Save the PDF with a unique filename
         filename = f"invoice_{invoice_number}.pdf"
