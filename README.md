@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from fpdf import FPDF
 
+
+
 # Define the services dictionary with prices
 services = {
     'Sewer Cleaning': [('Storm Flushing', 100), ('Sanitary Flushing', 50), ('FDC Flushing', 100), ('CB Cleaning', 150),
@@ -25,6 +27,7 @@ class InvoiceApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Invoice Generator")
+        self.root.configure(bg='lightblue')
 
         self.items = []
         # Canvas for header
@@ -36,69 +39,68 @@ class InvoiceApp:
         self.service_var = tk.StringVar()
         self.service_combo = ttk.Combobox(root, textvariable=self.service_var)
         self.service_combo['values'] = list(services.keys())
-        self.service_combo.grid(row=3, column=1, padx=10, pady=5)
+        self.service_combo.grid(row=5, column=1, padx=10, pady=5)
         self.service_combo.bind("<<ComboboxSelected>>", self.update_items)
 
         # Item selection
         self.item_var = tk.StringVar()
         self.item_combo = ttk.Combobox(root, textvariable=self.item_var)
-        self.item_combo.grid(row=4, column=1, padx=10, pady=5)
+        self.item_combo.grid(row=6, column=1, padx=10, pady=5)
 
         # Hours input
         self.hours_var = tk.IntVar()
         self.hours_entry = tk.Entry(root, textvariable=self.hours_var)
-        self.hours_entry.grid(row=5, column=1, padx=10, pady=5)
+        self.hours_entry.grid(row=7, column=1, padx=10, pady=5)
 
         # Company address input
         self.address_var = tk.StringVar()
         self.address_entry = tk.Entry(root, textvariable=self.address_var)
-        self.address_entry.grid(row=0, column=1, padx=10, pady=5)
+        self.address_entry.grid(row=2, column=1, padx=10, pady=5)
 
-        #City input
+        #City
         Cities=['Toronto','Ottawa','Mississauga','Brampton','Hamilton','London','Markham','Vaughan','Kitchener','Windsor']
         self.city_var = tk.StringVar()
         self.city_combo = ttk.Combobox(root, textvariable=self.city_var)
         self.city_combo['values'] = Cities
-        self.city_combo.grid(row=0, column=4, padx=10, pady=5)
+        self.city_combo.grid(row=2, column=4, padx=10, pady=5)
         # Invoice number input
         self.invoice_var = tk.StringVar()
         self.invoice_entry = tk.Entry(root, textvariable=self.invoice_var)
-        self.invoice_entry.grid(row=1, column=1, padx=10, pady=5)
+        self.invoice_entry.grid(row=3, column=1, padx=10, pady=5)
 
         # Date input
         self.date_var = tk.StringVar()
         self.date_entry = tk.Entry(root, textvariable=self.date_var)
-        self.date_entry.grid(row=2, column=1, padx=10, pady=5)
+        self.date_entry.grid(row=4, column=1, padx=10, pady=5)
 
         # Tax percentage input
         self.tax_var = tk.DoubleVar()
         self.tax_entry = tk.Entry(root, textvariable=self.tax_var)
-        self.tax_entry.grid(row=6, column=1, padx=10, pady=5)
+        self.tax_entry.grid(row=8, column=1, padx=10, pady=5)
 
         # Buttons
-        tk.Button(root, text="Add Item", command=self.add_item).grid(row=7, column=1, padx=10, pady=5)
-        tk.Button(root, text="Generate Invoice", command=self.generate_invoice).grid(row=8, column=1, padx=10, pady=5)
+        tk.Button(root, text="Add Item",bg='grey', command=self.add_item).grid(row=5, column=2, padx=10, pady=5)
+        tk.Button(root, text="Generate Invoice", bg='lightyellow',command=self.generate_invoice).grid(row=9, column=2, padx=10, pady=5)
 
         # Listbox for items
         self.items_listbox = tk.Listbox(root)
-        self.items_listbox.grid(row=9, column=1, padx=10, pady=5)
+        self.items_listbox.grid(row=9, column=1, padx=10, pady=50)
 
         # Labels
-        tk.Label(root, text="Company Address:",bg='lightblue').grid(row=0, column=0, padx=10, pady=5)
-        tk.Label(root,text="City:",bg='lightblue').grid(row=0,column=2,padx=40, pady=50)
-        tk.Label(root, text="Invoice Number:",bg='lightblue').grid(row=1, column=0, padx=10, pady=5)
-        tk.Label(root, text="Date:",bg='lightblue').grid(row=2, column=0, padx=10, pady=5)
-        tk.Label(root, text="Select Service:",bg='lightblue').grid(row=3, column=0, padx=10, pady=5)
-        tk.Label(root, text="Select Item:",bg='lightblue').grid(row=4, column=0, padx=10, pady=5)
-        tk.Label(root, text="Enter Hours:",bg='lightblue').grid(row=5, column=0, padx=10, pady=5)
-        tk.Label(root, text="Tax Percentage:",bg='lightblue').grid(row=6, column=0, padx=10, pady=5)
+        tk.Label(root, text="Company Address:",bg='lightyellow').grid(row=2, column=0, padx=10, pady=5)
+        tk.Label(root,text="City:",bg='lightyellow').grid(row=2,column=2,padx=40, pady=50)
+        tk.Label(root, text="Invoice Number:",bg='lightyellow').grid(row=3, column=0, padx=10, pady=5)
+        tk.Label(root, text="Date:",bg='lightyellow').grid(row=4, column=0, padx=10, pady=5)
+        tk.Label(root, text="Select Service:",bg='lightgreen').grid(row=5, column=0, padx=10, pady=5)
+        tk.Label(root, text="Select Item:",bg='lightgreen').grid(row=6, column=0, padx=10, pady=5)
+        tk.Label(root, text="Enter Hours:",bg='lightgreen').grid(row=7, column=0, padx=10, pady=5)
+        tk.Label(root, text="Tax Percentage:",bg='lightgreen').grid(row=8, column=0, padx=10, pady=5)
 
     def update_items(self, event):
         service = self.service_var.get()
         if service in services:
             items = [item[0] for item in services[service]]
             self.item_combo['values'] = items
-
     def add_item(self):
         service = self.service_var.get()
         item = self.item_var.get()
@@ -125,7 +127,7 @@ class InvoiceApp:
 
         pdf = FPDF()
         pdf.add_page()
-        pdf.set_font("Arial", size=16)
+        pdf.set_font("Arial", size=14)
 
         pdf.set_text_color(0, 0, 128)  # Set text color to dark blue
         pdf.cell(200, 10, txt="Global Sewer Services", ln=True, align='C')
